@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>태은이의 작업실</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#app">본문 바로가기</a>
+<nav class="bar" aria-label="이동">
+  <div class="bar-in">
+    <span id="bar-back"></span>
+    <span id="bar-name"></span>
+    <span id="bar-list"></span>
+  </div>
+</nav>
+<main id="app" tabindex="-1"></main>
+<dialog class="person" id="person" aria-labelledby="person-name">
+  <div class="person-in">
+    <div class="person-head">
+      <h2 id="person-name"></h2>
+      <button type="button" class="btn btn-secondary" id="person-close" autofocus>닫기</button>
+    </div>
+    <div class="person-body"><img id="person-img" src="" alt="" width="1086" height="1448"></div>
+  </div>
+</dialog>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

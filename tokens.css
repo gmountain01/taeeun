@@ -1,0 +1,108 @@
+/* 디자인 토큰 — 태은이의 작업실
+   v7 (2026-11-22, 사용자 선택 "시안 v7-A가 나은듯"): 시안 v7-A "정돈된 서가"(웹툰 플랫폼형). 기준 시안: design/시안/v7-A.html
+   개발은 이 변수만 쓴다. 값이 없으면 디자이너에게 요청한다(새 숫자 직접 쓰지 않기).
+   이름 정책: 지금 site/style.css가 쓰는 이름은 전부 남겼다(값만 v7). 새 이름은 "v7 신규", 곧 지울 이름은 "삭제 예정" 표시.
+   다크 모드: 미지원(라이트 고정). 상태 색: 입력·오류 화면이 없어 두지 않음.
+   대비(WCAG 2.x 계산값)는 각 줄 주석. 본문 7:1 이상, 보조 4.5:1 이상. */
+@import url("https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap");
+
+:root {
+  color-scheme: light;
+
+  /* ── 색: 흰 바탕 → 먹색 → 주홍 1점 ── */
+  --bg:           #FFFFFF;  /* 흰 종이. 아이 그림 색을 그대로 보이게(사용자 선택 시안) */
+  --surface:      #F2F3F5;  /* 적은 칸 정보 카드 면·2차 버튼·이미지 로딩 자리·작가 원 */
+  --ink:          #15171C;  /* 본문. bg 17.9:1 / surface 16.1:1 */
+  --ink-muted:    #4F5560;  /* 보조 글자. bg 7.5:1 / surface 6.7:1 */
+  --line:         #E3E5E9;  /* 구분선(장식선). 칸 머리 굵은 선은 --ink */
+  --accent:       #C93512;  /* 주홍. 글자로 써도 됨(bg 5.25:1, surface 4.7:1 — 14px 이상 굵게만). 주 버튼 면·탭 밑줄·초점 링·"N화" 글자. 화면 10% 이하 */
+  --accent-hover: #A82B0E;  /* v7 신규. 주 버튼 hover */
+  --on-accent:    #FFFFFF;  /* 주홍 위 글자 5.25:1 */
+  --overlay:      rgb(21 23 28 / .8); /* 컷 번호 "3/10"·재생 길이 알약 바탕. 흰 글자 최악(흰 컷 위) 약 10:1 */
+  --on-overlay:   #FFFFFF;
+  --scrim:        rgb(0 0 0 / .55);   /* 인물 팝업 뒤 */
+
+
+  /* ── 타입: 서체 2개, 굵기 3개(400·500·700) ── */
+  --font-display: "Black Han Sans", "Noto Sans KR", sans-serif;  /* 사이트 이름·칸 제목·작품/회차 제목(상세)·작가 원 글자에만. 굵기 400 하나뿐 */
+  --font-body:    "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-util:    var(--font-body); /* 숫자(N화, 3/10, 2:03)는 본문 서체 + tabular-nums */
+  --t-xs:   0.8125rem; /* 13px 카드 정보 줄·컷 번호·탭 개수·인물 이름 */
+  --t-sm:   0.875rem;  /* 14px 보조·"N화" 글자·끝 줄·바 링크 */
+  --t-md:   0.9375rem; /* v7 신규. 15px 표지 그리드 카드 제목·작가 소개·탭 글자·카드 요약 */
+  --t-base: 1rem;      /* 16px 본문·버튼·회차 제목 */
+  --t-lg:   1.1875rem; /* 19px 정보 카드 제목 */
+  --t-xl:   1.375rem;  /* 22px 사이트 이름·상세의 칸 제목(등장인물·회차)·팝업 이름·회차 보기 제목(폰) */
+  --t-2xl:  1.5rem;    /* 24px 홈 칸 제목(웹툰·음악)·회차 보기 제목(768+) */
+  --t-3xl:  1.75rem;   /* 28px 상세 제목(폰) */
+  --t-4xl:  2.75rem;   /* 44px 상세 제목(768+) — 화면의 주인공 */
+  --lh-tight: 1.2;     /* 제목 */
+  --lh-card:  1.4;     /* v7 신규. 카드 제목(2줄 자름) */
+  --lh-body:  1.65;    /* 본문 */
+  --lh-read:  1.75;    /* v7 신규. 작품 소개(상세)·가사 */
+  --w-reg: 400; --w-mid: 500; --w-strong: 700;
+  --w-display: 400;    /* Black Han Sans는 400 하나. 900 등으로 쓰면 가짜 굵게가 생김 */
+  --tracking-display: 0;
+
+  /* ── 간격: 4px 기반 ── */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px;
+  --s-6: 32px; --s-7: 48px; --s-8: 64px;
+  --gutter: 16px;      /* 좌우 여백: 폰 16, 768+ 24(아래 미디어쿼리). 넓히지 않는다 */
+  --wide: 1200px;      /* 홈·상세 최대 폭 */
+  --col: 640px;        /* 회차 보기 컷 열 최대 폭 */
+  --measure: 36em;     /* 소개 글 한 줄 최대 */
+  --bar-h: 48px;       /* 고정 바 높이(상세·회차의 바 / 홈의 카테고리 탭 줄). 홈 폰의 사이트 이름 줄은 고정하지 않음 */
+  --tap: 44px;         /* 최소 터치 대상(탭·얼굴·바 링크) */
+  --tap-lg: 48px;      /* 주 버튼·이전/목록/다음 */
+  --tab-line: 3px;     /* v7 신규. 탭 hover·초점 밑줄(주홍) */
+  --rule: 2px;         /* v7 신규. 홈 칸 머리 밑 굵은 선(--ink) */
+  --cut-gap: var(--s-2);   /* 컷 사이: 폰 8, 768+ 16 */
+  --grid-cols: 2;          /* v7 신규. 표지 그리드 열: 폰 2, 768 4, 1024+ 6(전체 폭 칸) */
+  --cover-sm: 104px;       /* 상세 머리 표지 폭(폰, 4:5 → 높이 130) */
+  --cover-w: 200px;        /* 상세 머리 표지 폭(768+, 높이 250) */
+  --ep-thumb-w: 96px;      /* 회차 목록 썸네일(4:3) 폰 */
+  --ep-thumb-w-lg: 128px;  /* 768+ */
+  --card-img: 112px;       /* 정보 카드(적은 칸) 표지 폭 폰 */
+  --card-img-md: 148px;    /* 768+ */
+  --card-img-lg: 200px;    /* 1024+에서 혼자 남은 1개짜리 칸(넓은 정보 카드) */
+  --aside-w: 320px;        /* v7 신규. 웹툰 상세 1024+ 오른쪽 등장인물 열 */
+  --dialog-w: 520px;       /* 인물 시트 팝업 최대 폭 */
+  --cover-music: 280px;    /* 음악 상세 커버(정사각) 폰·768 */
+  --cover-music-lg: 400px; /* 1024+ */
+  --media-w: 880px;        /* 영상·그림 최대 폭 */
+  --avatar: 48px;          /* 작가 원(폰) */
+  --avatar-lg: 64px;       /* 작가 원(768+). v4.1의 160px 큰 원은 v7에서 한 줄 작가 띠로 바뀜 */
+  --face: 56px;            /* 인물 얼굴 원 */
+  --face-lg: 56px;         /* 768+도 같음(줄이 촘촘하게) */
+
+  /* ── 반경: 중간 하나 + 작은 것 ── */
+  --r-sm: 4px;     /* 정보 카드 안 표지·회차 썸네일·컷(768+) */
+  --r-md: 6px;     /* 표지·버튼·정보 카드 면·팝업 */
+  --r-pill: 999px; /* 작가 원·인물 얼굴·컷 번호 알약 */
+
+  /* ── 초점: 주홍 3px (bg 5.25:1, surface 4.7:1, 주 버튼 바깥 2px 띄움) ── */
+  --focus: 3px solid var(--accent);
+  --focus-offset: 2px;
+
+  /* ── 비율 ── */
+  --ratio-cut: 4 / 5;      /* 컷·웹툰 표지 */
+  --ratio-thumb: 1 / 1;    /* 음악 커버·인물 얼굴·작가 원 */
+  --ratio-ep-thumb: 4 / 3; /* 회차 썸네일·영상/그림 카드 */
+  --ratio-video: 16 / 9;
+
+  /* ── 모션: hover 밑줄·색만. 움직이는 효과 없음 ── */
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --ease-out: cubic-bezier(.2,.8,.2,1);
+}
+
+@media (min-width: 768px) {
+  :root { --gutter: 24px; --cut-gap: var(--s-4); --grid-cols: 4; }
+}
+@media (min-width: 1024px) {
+  :root { --grid-cols: 6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 1ms !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }
+}
