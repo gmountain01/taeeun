@@ -166,6 +166,7 @@ button { font: inherit; color: inherit; }
 /* v7.5: 액자 하나(4:5, contain, --frame 바탕) — 종류·칸 모양과 상관없이 모든 홈 카드가 같은 액자를 쓴다 */
 .frame { aspect-ratio: var(--ratio-frame); background: var(--frame); border-radius: var(--r-sm); overflow: hidden; }
 .frame img { width: 100%; height: 100%; object-fit: contain; }
+.cat.music .frame img { object-fit: cover; } /* 음악 포스터(정사각)만 액자를 채운다(좌우 약 10% 잘림). 웹툰·시화는 contain 유지 */
 
 /* 3개 이상 = 표지 그리드 */
 .grid { display: grid; grid-template-columns: repeat(var(--grid-cols), minmax(0, 1fr)); gap: var(--s-5) var(--s-3); margin: 0; padding: 0; list-style: none; }
@@ -180,7 +181,6 @@ button { font: inherit; color: inherit; }
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: calc(2em * var(--lh-card));
 }
 .card .m { margin: 0; font-size: var(--t-xs); color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card a:hover h3 { text-decoration: underline; }
@@ -199,10 +199,12 @@ button { font: inherit; color: inherit; }
   display: grid;
   grid-template-columns: var(--card-img) minmax(0, 1fr);
   gap: var(--s-4);
-  align-items: start;
+  align-items: stretch;
 }
 @media (min-width: 768px) { .few .card a, .solo .card a { grid-template-columns: var(--card-img-md) minmax(0, 1fr); } }
-.few .card h3, .solo .card h3 { margin: 0; font-size: var(--t-lg); line-height: var(--lh-tight); -webkit-line-clamp: 2; min-height: calc(2em * var(--lh-tight)); }
+/* 글 칸을 세로 flex로: 제목 바로 아래 정보 줄(빈 줄 없음), 하이라이트는 margin-top:auto로 카드 맨 아래 — 카드 높이 자체는 그대로(액자 높이가 기준) */
+.few .card a > div, .solo .card a > div { display: flex; flex-direction: column; min-width: 0; }
+.few .card h3, .solo .card h3 { margin: 0; font-size: var(--t-lg); line-height: var(--lh-tight); -webkit-line-clamp: 2; }
 .few .card .m, .solo .card .m { margin: var(--s-1) 0 0; font-size: var(--t-sm); }
 .few .sum, .solo .sum {
   margin: var(--s-2) 0 0;
@@ -213,14 +215,17 @@ button { font: inherit; color: inherit; }
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: 3.2em;
 }
-.few .hl, .solo .hl { margin: var(--s-2) 0 0; font-size: var(--t-sm); font-weight: var(--w-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.few .hl, .solo .hl { margin: var(--s-2) 0 0; margin-top: auto; padding-top: var(--s-2); font-size: var(--t-sm); font-weight: var(--w-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .few .hl span:first-child, .solo .hl span:first-child { color: var(--accent); margin-right: var(--s-1); }
 
-/* solo(혼자 남은 칸) + 작품 1개: 카드 옆(768+)에 같은 높이의 "작품 안쪽" 미리보기. 폰은 숨김(장식이 아니라 정보라 숨김, 첫 화면 절약) */
+/* 작품 1개뿐인 칸(혼자 남은 solo, 또는 768-1023에서 전체 폭이 된 pair) 옆에 같은 높이의 "작품 안쪽" 미리보기.
+   폰은 숨김(장식이 아니라 정보라 숨김, 첫 화면 절약). solo는 768+ 내내, pair는 768-1023에서만(1024+는 반쪽 폭이라 카드 1장만) */
 .inside { display: none; }
-@media (min-width: 768px) { .inside { display: block; } }
+.solo .inside { display: none; }
+@media (min-width: 768px) { .solo .inside { display: block; } }
+.few .inside { display: none; }
+@media (min-width: 768px) and (max-width: 1023px) { .few .inside { display: block; } }
 .inside h4 { margin: 0 0 var(--s-2); font-size: var(--t-sm); color: var(--ink-muted); font-weight: var(--w-strong); }
 .inside ol { list-style: none; margin: 0; padding: 0; }
 .inside li a { display: flex; gap: var(--s-2); align-items: center; min-height: var(--tap); border-bottom: 1px solid var(--line); }

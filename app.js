@@ -152,13 +152,10 @@
     }).filter(function (g) { return g.list.length; });
   }
 
-  // 정보 줄(날짜 없이): 웹툰 "N화까지 · 인물 N명" / 음악 "노래 · 2:03" / 영상 "영상 · 2:03" / 그림 "그림 N장"
+  // 정보 줄(날짜 없이): 웹툰 "N화까지" / 음악 "노래 · 2:03" / 영상 "영상 · 2:03" / 그림 "그림 N장"
   function workMetaLine(w) {
-    if (w.type === "comic") {
-      var s = w.episodes ? w.episodes.length + "화까지" : "";
-      if (w.characters && w.characters.length) s += (s ? " · " : "") + "인물 " + w.characters.length + "명";
-      return s;
-    }
+    // v7.6: 홈 카드 정보 줄에서 "인물 N명"은 뺀다(폰·768에서 날짜가 잘렸음). 웹툰 상세 머리의 정보 줄은 그대로 인물 수를 보여 준다(별도 코드).
+    if (w.type === "comic") return w.episodes ? w.episodes.length + "화까지" : "";
     if (w.type === "music") return "노래 · " + w.duration;
     if (w.type === "video") return "영상 · " + w.duration;
     if (w.type === "art") return "그림 " + (w.images ? w.images.length : 0) + "장";
@@ -354,7 +351,8 @@
     var cards = g.list.map(function (w) {
       return el("li", { class: "card" }, [isFull ? renderGridCard(w.id, w.data) : renderInfoCard(w.id, w.data)]);
     });
-    if (cls === "solo" && g.list.length === 1) cards.push(renderInsideBox(g.list[0].id, g.list[0].data));
+    // solo(768+ 내내 2열)나 짝(pair, 768-1023만 전체 폭 2열)이 작품 1개뿐이면 옆 칸에 "작품 안쪽" 미리보기를 붙인다(CSS가 칸 모양별로 보일 범위를 가린다).
+    if (!isFull && g.list.length === 1) cards.push(renderInsideBox(g.list[0].id, g.list[0].data));
     return el("section", { class: "cat " + g.type + " " + cls, id: "cat-" + g.type, "aria-labelledby": "h-" + g.type }, [
       el("div", { class: "cat-head" }, [
         el("h2", { id: "h-" + g.type, tabindex: "-1" }, [CAT_NAME[g.type]]),
