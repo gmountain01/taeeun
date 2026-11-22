@@ -85,10 +85,35 @@
     return "img/" + seriesId + "/ep" + ep.n + "/thumb.jpg";
   }
 
+  // build_images.py가 실제로 저장한 이미지의 (폭, 높이)를 돌려준다(site/img-sizes.js, 없으면 null).
+  // 세로가 짧은 컷이 가로로 늘어나 보이는 문제(폰·카카오톡 인앱 브라우저)를 막으려고 고정 숫자 대신 이 표를 쓴다.
+  function imgSizeAttrs(path) {
+    var s = window.IMG_SIZES && window.IMG_SIZES[path];
+    return s ? { width: String(s[0]), height: String(s[1]) } : {};
+  }
+
+  function extend(target, src) {
+    for (var k in src) target[k] = src[k];
+    return target;
+  }
+
   function workCoverSrc(w) {
     if (w.type === "video" || w.type === "music") return w.poster;
     if (w.type === "art") return w.images && w.images[0] ? w.images[0].src : "";
     return w.cover;
+  }
+
+  // "img/eokgyo/cover.jpg" -> "img/eokgyo/cover-200.jpg" 같은, build_images.py가 같이 만들어 둔 작은 사본 경로.
+  function smallVariantSrc(path, width) {
+    return path.replace(/(\.[a-z]+)$/i, "-" + width + "$1");
+  }
+
+  // 홈 카드(112/148px)용 srcset. 880 원본을 그 자리에서 직접 줄이면 계단짐(앨리어싱)이 생겨 작은 사본(cover-200/400, poster-160/320)을 쓴다.
+  // video·art는 작은 사본이 없어 원본을 그대로 쓴다(카드가 더 크고 해당 민원이 없었음).
+  function homeCoverSrcset(w, cover) {
+    if (w.type === "comic") return { srcset: smallVariantSrc(cover, 200) + " 200w, " + smallVariantSrc(cover, 400) + " 400w", sizes: "(min-width: 768px) 148px, 112px" };
+    if (w.type === "music") return { srcset: smallVariantSrc(cover, 160) + " 160w, " + smallVariantSrc(cover, 320) + " 320w", sizes: "(min-width: 768px) 148px, 112px" };
+    return {};
   }
 
   // 재생기 끝부분을 자르지 않고, 사이트에서만 지정 시각 이후가 안 보이게/안 들리게 멈춘다(끝으로 끌어도 되돌아옴).
@@ -147,7 +172,7 @@
             "data-name": c.name,
             "data-sheet-alt": c.sheetAlt || c.name + " 캐릭터 시트",
           },
-          [el("img", { src: c.img, alt: "", loading: "lazy" }), el("span", {}, [c.name])]
+          [el("img", extend({ src: c.img, alt: "", loading: "lazy" }, imgSizeAttrs(c.img))), el("span", {}, [c.name])]
         ),
       ]);
     });
@@ -193,9 +218,11 @@
   }
 
   function coverImgAttrs(w) {
-    // CLS 힌트용 width/height. 실제 보이는 비율은 style.css의 aspect-ratio가 정한다(웹툰 5:7, 나머지 타입별 비율).
-    var attrs = { class: "im", src: workCoverSrc(w), alt: "", loading: "lazy" };
-    if (w.type === "comic") { attrs.width = "250"; attrs.height = "350"; }
+    // width/height는 img-sizes.js의 실제 픽셀(표지·포스터 원본 비율) — CSS aspect-ratio가 실제 보이는 크기는 따로 정한다.
+    var cover = workCoverSrc(w);
+    var attrs = extend({ class: "im", src: cover, alt: "", loading: "lazy" }, imgSizeAttrs(cover));
+    var srcsetAttrs = homeCoverSrcset(w, cover);
+    if (srcsetAttrs.srcset) { attrs.srcset = srcsetAttrs.srcset; attrs.sizes = srcsetAttrs.sizes; }
     return attrs;
   }
 
@@ -329,7 +356,13 @@
 
     var head = el("div", { class: "d-head" }, [
       el("a", { href: s.cover, class: "cover-open", "aria-label": s.title + " 표지 크게 보기", "aria-haspopup": "dialog", "data-name": s.title, "data-sheet-alt": s.coverAlt }, [
-        el("img", { class: "im", src: s.cover, alt: s.coverAlt, width: "880", height: "1232" }),
+        el("img", extend({
+          class: "im",
+          src: smallVariantSrc(s.cover, 400),
+          srcset: smallVariantSrc(s.cover, 200) + " 200w, " + smallVariantSrc(s.cover, 400) + " 400w",
+          sizes: "(min-width: 768px) 200px, 104px",
+          alt: s.coverAlt,
+        }, imgSizeAttrs(s.cover))),
       ]),
       el("div", {}, [el("p", { class: "kicker" }, ["웹툰"]), el("h1", {}, [s.title]), el("p", { class: "d-meta" }, [metaParts.join(" · ")])]),
       el("div", { class: "d-more" }, [
@@ -356,7 +389,7 @@
           s.episodes.slice().reverse().map(function (ep) {
             return el("li", { class: "ep" }, [
               el("a", { href: "#/ep/" + id + "/" + ep.n }, [
-                el("img", { src: epThumbSrc(id, ep), alt: "", width: "320", height: "320", loading: "lazy" }),
+                el("img", extend({ src: epThumbSrc(id, ep), alt: "", loading: "lazy" }, imgSizeAttrs(epThumbSrc(id, ep)))),
                 el("span", {}, [badge(ep.n + "화"), el("span", { class: "t" }, [ep.title])]),
               ]),
             ]);
@@ -437,7 +470,7 @@
 
     var coverChild = s.poster
       ? el("a", { href: s.poster, class: "cover-open", "aria-label": s.title + " 커버 크게 보기", "aria-haspopup": "dialog", "data-name": s.title, "data-sheet-alt": s.title + " 커버" }, [
-          el("img", { class: "im", src: s.poster, alt: "" }),
+          el("img", extend({ class: "im", src: s.poster, alt: "" }, imgSizeAttrs(s.poster))),
         ])
       : el("div", { class: "im" });
     var cover = el("div", { class: "music-cover" }, [coverChild]);
@@ -489,12 +522,8 @@
     var cutsList = el("ol", { class: "cuts", id: "cuts", tabindex: "-1", "aria-label": ep.n + "화 컷 " + ep.cuts.length + "장" });
     ep.cuts.forEach(function (alt, i) {
       var n2 = i + 1;
-      var imgAttrs = {
-        src: "img/" + id + "/ep" + ep.n + "/" + n2 + ".jpg",
-        alt: alt,
-        width: "1080",
-        height: "1350",
-      };
+      var cutSrc = "img/" + id + "/ep" + ep.n + "/" + n2 + ".jpg";
+      var imgAttrs = extend({ src: cutSrc, alt: alt }, imgSizeAttrs(cutSrc));
       if (i > 0) imgAttrs.loading = "lazy";
       cutsList.appendChild(
         el("li", {}, [el("img", imgAttrs), el("span", { class: "count", "aria-hidden": "true" }, [n2 + "/" + ep.cuts.length])])
@@ -603,8 +632,11 @@
       e.preventDefault();
       personOpener = a;
       personName.textContent = a.dataset.name;
-      personImg.src = a.getAttribute("href");
+      var hrefPath = a.getAttribute("href");
+      personImg.src = hrefPath;
       personImg.alt = a.dataset.sheetAlt || a.dataset.name + " 캐릭터 시트";
+      var sz = window.IMG_SIZES && window.IMG_SIZES[hrefPath];
+      if (sz) { personImg.width = sz[0]; personImg.height = sz[1]; } else { personImg.removeAttribute("width"); personImg.removeAttribute("height"); }
       dialog.showModal();
       dialog.scrollTop = 0;
     });
