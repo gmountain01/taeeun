@@ -395,7 +395,7 @@ dialog.person::backdrop { background: var(--scrim); }
 
 /* ── 음악·시화 상세: "전시 벽"(v7.7) ──
    작품 톤 바탕 띠 안에 그림 + 글. 폰: 제목 → 그림 → 본문 한 줄. 768+: 그림 왼쪽(두 행 차지) / 제목·본문 오른쪽. 그림은 스크롤을 따라오지 않고, 높이는 오른쪽 글에 맞춘다. */
-.exhibit { --tone: var(--surface); background: var(--tone); }
+.exhibit { --tone: var(--bg); background: var(--tone); } /* tone 없으면 흰 바탕(2026-11-22 사용자: 시화 배경색 별로) */
 .exhibit.tone-warm { --tone: var(--tone-warm); }
 .exhibit.tone-cool { --tone: var(--tone-cool); }
 .exhibit-in {

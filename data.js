@@ -100,7 +100,7 @@ window.DATA = {
     ujeong: {
       type: "music",
       title: "우정 파워 있다",
-      tone: "cool", // 상세 화면 바탕 톤(warm|cool, 없으면 회색). 값은 design/tokens.css --tone-*
+      tone: "cool", // 상세 화면 바탕 톤(warm|cool, 없으면 흰 바탕). 값은 design/tokens.css --tone-*
       summary: "오프닝곡 「함께여서 두렵지 않아」예요. 친구들과 함께라면 뭐든 할 수 있는 우정 이야기를 담았어요.",
       updated: "2026-11-22",
       poster: "img/ujeong/poster.jpg",
@@ -157,7 +157,6 @@ window.DATA = {
     seongam: {
       type: "poem",
       title: "선감",
-      tone: "warm",
       updated: "2026-11-22",
       image: { src: "img/seongam/1122.jpg", w: 1122, h: 1402 },
       imageAlt:
