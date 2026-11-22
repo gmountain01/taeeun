@@ -537,7 +537,9 @@
     var h = Number(img && img.getAttribute("height")) || 1;
     var cap = window.innerWidth >= 1024 ? 480 : 320;
     for (var i = 0; i < 2; i++) {
-      var textH = body.getBoundingClientRect().bottom - head.getBoundingClientRect().top;
+      // body 상자는 grid 행에서 그림 높이만큼 늘어나므로, 실제 마지막 글 요소의 끝을 잰다.
+      var last = body.lastElementChild || body;
+      var textH = last.getBoundingClientRect().bottom - head.getBoundingClientRect().top;
       var artW = Math.max(200, Math.min(cap, Math.round(textH * w / h)));
       inn.style.gridTemplateColumns = artW + "px minmax(0, 1fr)";
     }
