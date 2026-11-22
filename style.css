@@ -229,6 +229,8 @@ button { font: inherit; color: inherit; }
   border-bottom: 1px solid var(--line);
 }
 .d-head .im { width: 100%; aspect-ratio: var(--ratio-cover); object-fit: cover; border-radius: var(--r-md); background: var(--surface); }
+.cover-open { display: block; }
+.cover-open:hover .im { opacity: .92; }
 .kicker { margin: 0; color: var(--accent); font-weight: var(--w-strong); font-size: var(--t-sm); }
 .d-head h1 { margin: var(--s-1) 0 var(--s-2); font: var(--w-reg) var(--t-3xl)/var(--lh-tight) var(--font-display); }
 .d-meta { margin: 0; font-size: var(--t-sm); color: var(--ink-muted); }
@@ -352,7 +354,7 @@ dialog.person::backdrop { background: var(--scrim); }
 .person-head h2 { font: var(--w-reg) var(--t-xl)/var(--lh-tight) var(--font-display); margin: 0; }
 .person-head .btn { min-height: var(--tap); padding: 0 var(--s-4); }
 .person-body { padding: var(--s-4); }
-.person-body img { width: 100%; height: auto; border-radius: var(--r-sm); background: var(--surface); }
+.person-body img { width: 100%; height: auto; object-fit: contain; border-radius: var(--r-sm); background: var(--surface); }
 
 /* 영상·그림 상세 */
 .media-head { padding: var(--s-5) 0 var(--s-4); }

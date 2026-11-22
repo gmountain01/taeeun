@@ -328,7 +328,9 @@
     metaParts.push(formatKoreanDate(s.updated) + " 업데이트");
 
     var head = el("div", { class: "d-head" }, [
-      el("img", { class: "im", src: s.cover, alt: s.coverAlt, width: "880", height: "1232" }),
+      el("a", { href: s.cover, class: "cover-open", "aria-label": s.title + " 표지 크게 보기", "aria-haspopup": "dialog", "data-name": s.title, "data-sheet-alt": s.coverAlt }, [
+        el("img", { class: "im", src: s.cover, alt: s.coverAlt, width: "880", height: "1232" }),
+      ]),
       el("div", {}, [el("p", { class: "kicker" }, ["웹툰"]), el("h1", {}, [s.title]), el("p", { class: "d-meta" }, [metaParts.join(" · ")])]),
       el("div", { class: "d-more" }, [
         el("p", {}, [s.summary]),
@@ -434,7 +436,9 @@
     document.title = s.title + " — " + DATA.siteName;
 
     var coverChild = s.poster
-      ? el("img", { class: "im", src: s.poster, alt: "" })
+      ? el("a", { href: s.poster, class: "cover-open", "aria-label": s.title + " 커버 크게 보기", "aria-haspopup": "dialog", "data-name": s.title, "data-sheet-alt": s.title + " 커버" }, [
+          el("img", { class: "im", src: s.poster, alt: "" }),
+        ])
       : el("div", { class: "im" });
     var cover = el("div", { class: "music-cover" }, [coverChild]);
 
