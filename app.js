@@ -192,10 +192,24 @@
     return el("header", { class: "top" }, [el("div", { class: "wrap top-in" }, children)]);
   }
 
+  function coverImgAttrs(w) {
+    // CLS 힌트용 width/height. 실제 보이는 비율은 style.css의 aspect-ratio가 정한다(웹툰 5:7, 나머지 타입별 비율).
+    var attrs = { class: "im", src: workCoverSrc(w), alt: "", loading: "lazy" };
+    if (w.type === "comic") { attrs.width = "250"; attrs.height = "350"; }
+    return attrs;
+  }
+
+  function renderFooter() {
+    return el("div", { class: "foot" }, [
+      el("p", {}, ["태은이의 상상으로 시작되는 특별한 이야기"]),
+      el("p", { class: "small muted" }, ["© 2026 " + DATA.siteName + ". 모든 작품의 저작권은 작가에게 있어요."]),
+    ]);
+  }
+
   function renderGridCard(id, w) {
     var cover = workCoverSrc(w);
     return el("a", { href: "#/series/" + id }, [
-      cover ? el("img", { class: "im", src: cover, alt: "", loading: "lazy" }) : el("div", { class: "im" }),
+      cover ? el("img", coverImgAttrs(w)) : el("div", { class: "im" }),
       el("h3", {}, [w.title]),
       el("p", { class: "m" }, [workMetaLine(w)]),
     ]);
@@ -216,7 +230,7 @@
       });
     }
     return el("a", { href: "#/series/" + id, class: wide ? "wide" : null }, [
-      cover ? el("img", { class: "im", src: cover, alt: "", loading: "lazy" }) : el("div", { class: "im" }),
+      cover ? el("img", coverImgAttrs(w)) : el("div", { class: "im" }),
       el("div", {}, textChildren),
     ]);
   }
@@ -279,7 +293,7 @@
         el("div", { class: "wrap" }, [
           renderAuthorRow(author),
           el("p", { class: "empty-note" }, ["아직 올린 작품이 없어요."]),
-          el("p", { class: "foot" }, ["© 2026 " + DATA.siteName + ". 모든 작품의 저작권은 작가에게 있어요."]),
+          renderFooter(),
         ])
       );
       return;
@@ -290,7 +304,7 @@
       el("div", { class: "wrap" }, [
         renderAuthorRow(author),
         el("div", { class: "secs" }, classified.map(renderCategorySection)),
-        el("p", { class: "foot" }, ["© 2026 " + DATA.siteName + ". 모든 작품의 저작권은 작가에게 있어요."]),
+        renderFooter(),
       ])
     );
   }
@@ -314,7 +328,7 @@
     metaParts.push(formatKoreanDate(s.updated) + " 업데이트");
 
     var head = el("div", { class: "d-head" }, [
-      el("img", { class: "im", src: s.cover, alt: s.coverAlt }),
+      el("img", { class: "im", src: s.cover, alt: s.coverAlt, width: "880", height: "1232" }),
       el("div", {}, [el("p", { class: "kicker" }, ["웹툰"]), el("h1", {}, [s.title]), el("p", { class: "d-meta" }, [metaParts.join(" · ")])]),
       el("div", { class: "d-more" }, [
         el("p", {}, [s.summary]),
@@ -523,18 +537,11 @@
   }
 
   // route()는 우리 라우트(#/...)를 실제로 그렸으면 true, 아니면(바로가기 #app·카테고리 #cat-* 등 밖의 해시) false를 돌려준다.
+  // 최초 로드 때 생기는 "주소창에 #cat-music 등이 남아 있던 경우"는 아래 최초 로드 처리(해시를 "#/"로 바꾸고 홈을 그림)가 먼저 맡으므로,
+  // route()는 hashchange(이미 홈 등 뭔가 그려진 뒤)만 신경 쓰면 된다.
   function route() {
     var raw = location.hash;
-    if (raw && raw.indexOf("#/") !== 0) {
-      // 처음 들어왔을 때(아직 아무것도 안 그려짐)만 홈을 그리고, 그 해시가 가리키는 자리가 있으면 그리로 옮긴다.
-      // (새로고침·주소창에 #cat-music 같은 해시를 직접 넣고 들어온 경우 빈 화면이 되는 것 방지)
-      if (!app.firstChild) {
-        renderHome();
-        var target = document.getElementById(raw.slice(1));
-        if (target) target.scrollIntoView();
-      }
-      return false;
-    }
+    if (raw && raw.indexOf("#/") !== 0) return false;
     var hash = raw.replace(/^#/, "") || "/";
     var parts = hash.split("/").filter(Boolean);
     if (parts.length === 0) { renderHome(); return true; }
@@ -609,5 +616,13 @@
   }
 
   window.addEventListener("hashchange", onHashChange);
-  route(); // 첫 로드는 초점·스크롤을 건드리지 않는다(바로가기 링크가 첫 Tab이 되도록)
+
+  // 최초 로드: 해시가 무엇이었든(#/series/x, #cat-*, #app, 없음 등) 항상 홈에서 시작한다("맨 처음 들어가면 홈 화면이 나와야 함").
+  // 초점은 안 건드린다(바로가기 링크가 첫 Tab이 되도록) — 그 점만 빼면 onHashChange와 달리 route()를 거치지 않고 바로 홈을 그린다.
+  if (window.history && "scrollRestoration" in window.history) history.scrollRestoration = "manual";
+  if (location.hash && location.hash !== "#/") {
+    history.replaceState(null, "", location.pathname + location.search + "#/");
+  }
+  renderHome();
+  window.scrollTo(0, 0);
 })();

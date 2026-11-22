@@ -166,7 +166,7 @@ button { font: inherit; color: inherit; }
 .grid { display: grid; grid-template-columns: repeat(var(--grid-cols), minmax(0, 1fr)); gap: var(--s-5) var(--s-3); margin: 0; padding: 0; list-style: none; }
 @media (min-width: 768px) { .grid { gap: var(--s-5) var(--s-4); } }
 .card a { display: block; height: 100%; }
-.card .im { width: 100%; aspect-ratio: var(--ratio-cut); object-fit: cover; border-radius: var(--r-md); background: var(--surface); }
+.card .im { width: 100%; aspect-ratio: var(--ratio-cover); object-fit: cover; border-radius: var(--r-md); background: var(--surface); }
 .cat.music .im { aspect-ratio: var(--ratio-thumb); }
 .cat.video .im, .cat.art .im { aspect-ratio: var(--ratio-media); }
 .card h3 {
@@ -216,7 +216,9 @@ button { font: inherit; color: inherit; }
 .few .latest { margin: var(--s-2) 0 0; font-size: var(--t-sm); font-weight: var(--w-strong); }
 .few .latest span:first-child { color: var(--accent); margin-right: var(--s-1); }
 
-.foot { padding: var(--s-6) 0 var(--s-7); margin-top: var(--s-6); border-top: 1px solid var(--line); font-size: var(--t-sm); color: var(--ink-muted); }
+.foot { padding: var(--s-6) 0 var(--s-7); margin-top: var(--s-6); border-top: 1px solid var(--line); }
+.foot p { margin: 0; }
+.foot p + p { margin-top: var(--s-2); }
 
 /* ── 작품 상세(웹툰) ── */
 .d-head {
@@ -226,7 +228,7 @@ button { font: inherit; color: inherit; }
   padding: var(--s-2) 0 var(--s-6);
   border-bottom: 1px solid var(--line);
 }
-.d-head .im { width: 100%; aspect-ratio: var(--ratio-cut); object-fit: cover; border-radius: var(--r-md); background: var(--surface); }
+.d-head .im { width: 100%; aspect-ratio: var(--ratio-cover); object-fit: cover; border-radius: var(--r-md); background: var(--surface); }
 .kicker { margin: 0; color: var(--accent); font-weight: var(--w-strong); font-size: var(--t-sm); }
 .d-head h1 { margin: var(--s-1) 0 var(--s-2); font: var(--w-reg) var(--t-3xl)/var(--lh-tight) var(--font-display); }
 .d-meta { margin: 0; font-size: var(--t-sm); color: var(--ink-muted); }

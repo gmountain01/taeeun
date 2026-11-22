@@ -23,7 +23,7 @@ window.DATA = {
       summary: "초등학교 1학년이 된 억교가 학교에서 친구들과 함께 겪는 하루하루 이야기.",
       updated: "2026-11-21",
       cover: "img/eokgyo/cover.jpg",
-      coverAlt: "1화 표지: 억교가 걱정스러운 얼굴로 학교 정문을 지나는 모습",
+      coverAlt: "억교는 억울해 표지: 억교와 후잔이 학교 정문 앞에서 앞으로 걸어오고, 위에 꿈과 학교생활 장면들이 떠 있다",
       characters: [
         {
           name: "억교",
