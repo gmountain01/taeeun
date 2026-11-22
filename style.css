@@ -375,9 +375,8 @@ dialog.person::backdrop { background: var(--scrim); }
 
 /* 영상·그림 상세 */
 .media-head { padding: var(--s-5) 0 var(--s-4); }
-.media-head h1, .music-page h1, .poem-page h1, .wrap > h1 { font: var(--w-reg) var(--t-3xl)/var(--lh-tight) var(--font-display); margin: var(--s-1) 0 var(--s-2); }
-@media (min-width: 768px) { .media-head h1, .music-page h1, .poem-page h1, .wrap > h1 { font-size: var(--t-4xl); } }
-.music-page .kicker, .poem-page .kicker { margin: 0; }
+.media-head h1, .exhibit h1, .wrap > h1 { font: var(--w-reg) var(--t-3xl)/var(--lh-tight) var(--font-display); margin: var(--s-1) 0 var(--s-2); }
+@media (min-width: 768px) { .media-head h1, .exhibit h1, .wrap > h1 { font-size: var(--t-4xl); } }
 .wrap > h1 + .d-meta { margin: var(--s-2) 0 var(--s-4); }
 .notfound { padding-top: var(--s-7); }
 .media-box { max-width: var(--media-w); }
@@ -394,51 +393,67 @@ dialog.person::backdrop { background: var(--scrim); }
 .transcript summary { min-height: var(--tap); display: flex; align-items: center; cursor: pointer; font-weight: var(--w-strong); }
 .transcript p { margin: var(--s-2) 0 0; line-height: var(--lh-read); white-space: pre-line; }
 
-/* 음악 상세 */
-.music-page { padding: var(--s-5) 0 var(--s-7); display: grid; gap: var(--s-5); }
-.music-cover { width: min(100%, var(--cover-music)); }
-.music-cover .im { width: 100%; aspect-ratio: var(--ratio-thumb); object-fit: cover; border-radius: var(--r-md); background: var(--surface); }
-.music-page .back-row { margin-top: var(--s-6); }
+/* ── 음악·시화 상세: "전시 벽"(v7.7) ──
+   작품 톤 바탕 띠 안에 그림 + 글. 폰: 제목 → 그림 → 본문 한 줄. 768+: 그림 왼쪽(두 행 차지) / 제목·본문 오른쪽. 1024+: 그림 고정(sticky). */
+.exhibit { --tone: var(--surface); background: var(--tone); }
+.exhibit.tone-warm { --tone: var(--tone-warm); }
+.exhibit.tone-cool { --tone: var(--tone-cool); }
+.exhibit-in {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "head" "art" "body" "extra";
+  gap: var(--s-5);
+  padding-top: var(--s-6);
+  padding-bottom: var(--s-7);
+}
+.exhibit-head { grid-area: head; }
+.exhibit-head .kicker { margin: 0; }
+.exhibit-head .d-meta { margin: 0; }
+.exhibit-art { grid-area: art; width: min(100%, var(--cover-music-lg)); }
+.exhibit-art .im { width: 100%; object-fit: cover; border-radius: var(--r-md); background: var(--surface); }
+.exhibit-body { grid-area: body; min-width: 0; }
+.exhibit-body > .media-summary { margin: 0 0 var(--s-4); }
+.exhibit audio { display: block; width: 100%; max-width: var(--measure); }
 @media (min-width: 768px) {
-  .music-page { grid-template-columns: var(--cover-music) minmax(0, 1fr); column-gap: var(--s-6); align-items: start; }
+  .exhibit-in {
+    grid-template-columns: var(--exhibit-art-md) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "art head" "art body" "extra extra";
+    gap: var(--s-5) var(--s-6);
+    padding-top: var(--s-7);
+    padding-bottom: var(--s-8);
+  }
+  .exhibit-art { width: 100%; align-self: start; }
 }
 @media (min-width: 1024px) {
-  .music-page { grid-template-columns: var(--cover-music-lg) minmax(0, 1fr); }
-  .music-cover { width: var(--cover-music-lg); }
+  .exhibit-in { grid-template-columns: var(--exhibit-art-lg) minmax(0, 1fr); column-gap: var(--s-7); }
+  .exhibit-art { position: sticky; top: calc(var(--bar-h) + var(--s-5)); }
 }
 
-/* 시화 상세: 음악 상세와 같은 2열 틀(--cover-music/-lg)을 쓰되, 폰에서는 종류·제목·날짜가 그림보다 먼저 오도록 grid-template-areas로 순서를 따로 잡는다. */
-.poem-page {
-  display: grid;
-  gap: var(--s-2);
-  padding: var(--s-5) 0 var(--s-7);
-  grid-template-areas: "kicker" "title" "meta" "image" "poem" "summary" "back";
-}
-.poem-page > .kicker { grid-area: kicker; }
-.poem-page > h1 { grid-area: title; }
-.poem-page > .d-meta { grid-area: meta; margin-bottom: var(--s-2); }
-.poem-page > .cover-open { grid-area: image; width: min(100%, var(--cover-music)); }
-.poem-page > .cover-open .im { width: 100%; aspect-ratio: var(--ratio-cut); object-fit: cover; border-radius: var(--r-md); background: var(--surface); }
-.poem-page > .poem-body { grid-area: poem; }
-.poem-page > .media-summary { grid-area: summary; margin-top: 0; }
-.poem-page > .back-row { grid-area: back; margin-top: var(--s-4); }
-.poem-body p { margin: 0 0 var(--s-5) 0; max-width: var(--measure); font: var(--w-reg) var(--t-lg)/var(--lh-read) var(--font-body); color: var(--ink); white-space: pre-line; }
+/* 시: 디스플레이급 크기·넉넉한 행간. 연 사이는 한 줄 이상 */
+.poem-body p { margin: 0 0 var(--s-6); max-width: var(--measure); font: var(--w-mid) var(--t-xl)/var(--lh-poem) var(--font-body); color: var(--ink); white-space: pre-line; }
 .poem-body p:last-child { margin-bottom: 0; }
+.exhibit-body > .poem-body + .media-summary { margin-top: var(--s-6); }
+@media (min-width: 1024px) { .poem-body p { font-size: var(--t-3xl); } }
+
+/* 가사: 기본 펼침, 절 이름(주홍 작은 글자) + 가사 */
+.lyrics { grid-area: extra; max-width: var(--measure); }
+.lyrics h2 { margin: 0 0 var(--s-4); font: var(--w-reg) var(--t-xl)/var(--lh-tight) var(--font-display); }
+.lyrics .part + .part { margin-top: var(--s-5); }
+.lyrics h3 { margin: 0 0 var(--s-1); color: var(--accent); font-size: var(--t-sm); font-weight: var(--w-strong); }
+.lyrics p { margin: 0; font-size: var(--t-lg); line-height: var(--lh-read); white-space: pre-line; }
+/* 768+: 가사를 띠 전체 폭으로 내려 단으로 나눈다(768 2단, 1024+ 3단). 절은 단 사이에서 끊지 않는다 */
 @media (min-width: 768px) {
-  .poem-page {
-    column-gap: var(--s-6);
-    align-items: start;
-    grid-template-columns: var(--cover-music) minmax(0, 1fr);
-    grid-template-areas:
-      "image kicker"
-      "image title"
-      "image meta"
-      "image poem"
-      "image summary"
-      "image back";
-  }
-  .poem-page > .cover-open { width: 100%; }
+  .lyrics { max-width: none; margin-top: var(--s-5); padding-top: var(--s-6); border-top: 1px solid var(--line); columns: 2; column-gap: var(--s-6); }
+  .lyrics h2 { column-span: all; }
+  .lyrics .part { break-inside: avoid; }
+  .lyrics .part + .part { margin-top: 0; }
+  .lyrics .part { padding-bottom: var(--s-5); }
 }
-@media (min-width: 1024px) {
-  .poem-page { grid-template-columns: var(--cover-music-lg) minmax(0, 1fr); }
-}
+@media (min-width: 1024px) { .lyrics { columns: 3; column-gap: var(--s-7); } }
+
+/* 아래 흰 바탕: 다른 작품(홈 표지 그리드와 같은 액자 카드) + 목록 링크 */
+.more-wrap { padding-top: var(--s-7); padding-bottom: var(--s-7); }
+.more .cat-head h2 { margin: 0; font: var(--w-reg) var(--t-2xl)/var(--lh-tight) var(--font-display); }
+.is-music .frame img { object-fit: cover; } /* 홈 .cat.music과 같은 규칙(정사각 포스터는 액자를 채움) */
+.more-wrap .back-row { margin: var(--s-6) 0 0; }

@@ -522,39 +522,97 @@
     app.appendChild(el("div", { class: "wrap" }, children));
   }
 
+  // ── 음악·시화 상세 공용 "전시" 틀(v7.7) ──
+  // 작품 톤 바탕 띠(.exhibit) 안에 그림(왼쪽, 1024+ 고정) + 글(오른쪽). 아래 흰 바탕에 "다른 작품" 줄과 목록 링크.
+  // extra(선택): 768+에서 그림·글 아래 띠 전체 폭을 쓰는 칸(음악 가사).
+  function renderExhibit(s, kind, metaLine, art, bodyChildren, extra) {
+    var tone = s.tone === "warm" || s.tone === "cool" ? " tone-" + s.tone : "";
+    return el("article", { class: "exhibit" + tone }, [
+      el("div", { class: "wrap exhibit-in" }, [
+        el("header", { class: "exhibit-head" }, [
+          el("p", { class: "kicker" }, [kind]),
+          el("h1", {}, [s.title]),
+          el("p", { class: "d-meta" }, [metaLine]),
+        ]),
+        el("div", { class: "exhibit-art" }, [art]),
+        el("div", { class: "exhibit-body" }, bodyChildren),
+        extra || null,
+      ]),
+    ]);
+  }
+
+  // 같은 종류 먼저(최신순), 그다음 나머지(최신순). 홈 표지 그리드와 같은 액자 카드, 최대 6개(1024+ 한 줄).
+  function renderMoreWorks(id, s) {
+    var others = sortedWorks().filter(function (w) { return w.id !== id; });
+    var list = others.filter(function (w) { return w.data.type === s.type; })
+      .concat(others.filter(function (w) { return w.data.type !== s.type; }))
+      .slice(0, 6);
+    var children = [];
+    if (list.length) {
+      children.push(
+        el("section", { class: "more", "aria-labelledby": "h-more" }, [
+          el("div", { class: "cat-head" }, [el("h2", { id: "h-more" }, ["다른 작품"])]),
+          el("ul", { class: "grid" }, list.map(function (w) {
+            return el("li", { class: "card" + (w.data.type === "music" ? " is-music" : "") }, [renderGridCard(w.id, w.data)]);
+          })),
+        ])
+      );
+    }
+    children.push(el("p", { class: "back-row" }, [backLink("#/", "작품 목록으로")]));
+    return el("div", { class: "wrap more-wrap" }, children);
+  }
+
+  // 가사 "[Verse 1]" 같은 절 표시를 한국어 이름으로. 모르는 이름은 그대로 보여 준다.
+  var PART_NAME = { "Intro": "전주", "Verse": "절", "Verse 1": "1절", "Verse 2": "2절", "Verse 3": "3절", "Pre-Chorus": "후렴 앞", "Chorus": "후렴", "Bridge": "브리지", "Outro": "마무리" };
+  function lyricParts(transcript) {
+    var parts = [];
+    var cur = null;
+    (transcript || "").split("\n").forEach(function (line) {
+      var m = /^\[(.+)\]$/.exec(line.trim());
+      if (m || !cur) { cur = { label: m ? PART_NAME[m[1]] || m[1] : "", lines: [] }; parts.push(cur); }
+      if (!m) cur.lines.push(line);
+    });
+    return parts.map(function (p) { return { label: p.label, text: p.lines.join("\n").trim() }; })
+      .filter(function (p) { return p.text; });
+  }
+
   function renderMusicSeries(id, s) {
     setBar({ backHref: "#/", backText: DATA.siteName });
     document.title = s.title + " — " + DATA.siteName;
 
-    var coverChild = s.poster
+    var art = s.poster
       ? el("a", { href: s.poster, class: "cover-open", "aria-label": s.title + " 커버 크게 보기", "aria-haspopup": "dialog", "data-name": s.title, "data-sheet-alt": s.title + " 커버" }, [
-          el("img", extend({ class: "im", src: s.poster, alt: "" }, imgSizeAttrs(s.poster))),
+          el("img", extend({
+            class: "im",
+            src: s.poster,
+            srcset: smallVariantSrc(s.poster, 320) + " 320w, " + s.poster + " 880w",
+            sizes: "(min-width: 1024px) 480px, (min-width: 768px) 320px, calc(100vw - 32px)",
+            alt: "",
+          }, imgSizeAttrs(s.poster))),
         ])
       : el("div", { class: "im" });
-    var cover = el("div", { class: "music-cover" }, [coverChild]);
 
-    var audioEl = el("audio", { controls: "", preload: "metadata", src: s.src }, ["이 브라우저는 소리 재생을 지원하지 않아요."]);
+    var audioEl = el("audio", { controls: "", preload: "metadata", src: s.src, "aria-label": s.title + " 듣기" }, ["이 브라우저는 소리 재생을 지원하지 않아요."]);
     attachEndAtClamp(audioEl, s.endAt);
 
-    var info = [
-      el("p", { class: "kicker" }, ["음악"]),
-      el("h1", {}, [s.title]),
-      el("p", { class: "d-meta" }, ["노래 · " + s.duration + " · " + formatKoreanDate(s.updated)]),
-      el("p", { class: "media-summary" }, [s.summary]),
-      audioEl,
-    ];
-    if (s.transcript) {
-      info.push(
-        el("details", { class: "transcript" }, [
-          el("summary", {}, [s.transcriptLabel || "가사 보기"]),
-          el("p", {}, [s.transcript]),
-        ])
+    var body = [];
+    if (s.summary) body.push(el("p", { class: "media-summary" }, [s.summary]));
+    body.push(audioEl);
+    var parts = lyricParts(s.transcript);
+    var lyrics = null;
+    if (parts.length) {
+      lyrics = (
+        el("section", { class: "lyrics", "aria-labelledby": "h-lyrics" }, [
+          el("h2", { id: "h-lyrics" }, ["가사"]),
+        ].concat(parts.map(function (p) {
+          return el("div", { class: "part" }, [p.label ? el("h3", {}, [p.label]) : null, el("p", {}, [p.text])]);
+        })))
       );
     }
-    info.push(el("p", { class: "back-row" }, [backLink("#/", "작품 목록으로")]));
 
     app.innerHTML = "";
-    app.appendChild(el("div", { class: "wrap" }, [el("article", { class: "music-page" }, [cover, el("div", {}, info)])]));
+    app.appendChild(renderExhibit(s, "음악", "노래 · " + s.duration + " · " + formatKoreanDate(s.updated), art, body, lyrics));
+    app.appendChild(renderMoreWorks(id, s));
   }
 
   function renderPoemSeries(id, s) {
@@ -565,27 +623,18 @@
       class: "im",
       src: poemVariantSrc(s.image.src, 800),
       srcset: poemVariantSrc(s.image.src, 480) + " 480w, " + poemVariantSrc(s.image.src, 800) + " 800w, " + s.image.src + " 1122w",
-      sizes: "(min-width: 1024px) 400px, (min-width: 768px) 280px, 100vw",
+      sizes: "(min-width: 1024px) 480px, (min-width: 768px) 320px, calc(100vw - 32px)",
       alt: s.imageAlt,
     }, imgSizeAttrs(s.image.src)));
-    var coverLink = el("a", { href: s.image.src, class: "cover-open", "aria-label": s.title + " 그림 크게 보기", "aria-haspopup": "dialog", "data-name": s.title, "data-sheet-alt": s.imageAlt }, [imgEl]);
+    var art = el("a", { href: s.image.src, class: "cover-open", "aria-label": s.title + " 그림 크게 보기", "aria-haspopup": "dialog", "data-name": s.title, "data-sheet-alt": s.imageAlt }, [imgEl]);
 
-    var poemBody = el("div", { class: "poem-body" }, poemStanzas(s.poem).map(function (stanza) {
-      return el("p", {}, [stanza]);
-    }));
-
-    var children = [
-      el("p", { class: "kicker" }, ["시화"]),
-      el("h1", {}, [s.title]),
-      el("p", { class: "d-meta" }, [formatKoreanDate(s.updated) + " 업데이트"]),
-      coverLink,
-      poemBody,
-    ];
-    if (s.summary) children.push(el("p", { class: "media-summary" }, [s.summary]));
-    children.push(el("p", { class: "back-row" }, [backLink("#/", "작품 목록으로")]));
+    var stanzas = poemStanzas(s.poem);
+    var body = [el("div", { class: "poem-body" }, stanzas.map(function (stanza) { return el("p", {}, [stanza]); }))];
+    if (s.summary) body.push(el("p", { class: "media-summary" }, [s.summary]));
 
     app.innerHTML = "";
-    app.appendChild(el("div", { class: "wrap" }, [el("article", { class: "poem-page" }, children)]));
+    app.appendChild(renderExhibit(s, "시화", stanzas.length + "연 · " + formatKoreanDate(s.updated), art, body));
+    app.appendChild(renderMoreWorks(id, s));
   }
 
   function renderEpisode(id, n) {
