@@ -213,7 +213,7 @@ button { font: inherit; color: inherit; }
   overflow: hidden;
 }
 .few .card a.wide .sum { -webkit-line-clamp: 3; }
-.few .latest { margin: var(--s-2) 0 0; font-size: var(--t-sm); font-weight: var(--w-strong); }
+.few .latest { margin: var(--s-2) 0 0; font-size: var(--t-sm); font-weight: var(--w-strong); white-space: pre-line; }
 .few .latest span:first-child { color: var(--accent); margin-right: var(--s-1); }
 
 .foot { padding: var(--s-6) 0 var(--s-7); margin-top: var(--s-6); border-top: 1px solid var(--line); }
@@ -358,9 +358,9 @@ dialog.person::backdrop { background: var(--scrim); }
 
 /* 영상·그림 상세 */
 .media-head { padding: var(--s-5) 0 var(--s-4); }
-.media-head h1, .music-page h1, .wrap > h1 { font: var(--w-reg) var(--t-3xl)/var(--lh-tight) var(--font-display); margin: var(--s-1) 0 var(--s-2); }
-@media (min-width: 768px) { .media-head h1, .music-page h1, .wrap > h1 { font-size: var(--t-4xl); } }
-.music-page .kicker { margin: 0; }
+.media-head h1, .music-page h1, .poem-page h1, .wrap > h1 { font: var(--w-reg) var(--t-3xl)/var(--lh-tight) var(--font-display); margin: var(--s-1) 0 var(--s-2); }
+@media (min-width: 768px) { .media-head h1, .music-page h1, .poem-page h1, .wrap > h1 { font-size: var(--t-4xl); } }
+.music-page .kicker, .poem-page .kicker { margin: 0; }
 .wrap > h1 + .d-meta { margin: var(--s-2) 0 var(--s-4); }
 .notfound { padding-top: var(--s-7); }
 .media-box { max-width: var(--media-w); }
@@ -388,4 +388,40 @@ dialog.person::backdrop { background: var(--scrim); }
 @media (min-width: 1024px) {
   .music-page { grid-template-columns: var(--cover-music-lg) minmax(0, 1fr); }
   .music-cover { width: var(--cover-music-lg); }
+}
+
+/* 시화 상세: 음악 상세와 같은 2열 틀(--cover-music/-lg)을 쓰되, 폰에서는 종류·제목·날짜가 그림보다 먼저 오도록 grid-template-areas로 순서를 따로 잡는다. */
+.poem-page {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-5) 0 var(--s-7);
+  grid-template-areas: "kicker" "title" "meta" "image" "poem" "summary" "back";
+}
+.poem-page > .kicker { grid-area: kicker; }
+.poem-page > h1 { grid-area: title; }
+.poem-page > .d-meta { grid-area: meta; margin-bottom: var(--s-2); }
+.poem-page > .cover-open { grid-area: image; width: min(100%, var(--cover-music)); }
+.poem-page > .cover-open .im { width: 100%; aspect-ratio: var(--ratio-cut); object-fit: cover; border-radius: var(--r-md); background: var(--surface); }
+.poem-page > .poem-body { grid-area: poem; }
+.poem-page > .media-summary { grid-area: summary; margin-top: 0; }
+.poem-page > .back-row { grid-area: back; margin-top: var(--s-4); }
+.poem-body p { margin: 0 0 var(--s-5) 0; max-width: var(--measure); font: var(--w-reg) var(--t-lg)/var(--lh-read) var(--font-body); color: var(--ink); white-space: pre-line; }
+.poem-body p:last-child { margin-bottom: 0; }
+@media (min-width: 768px) {
+  .poem-page {
+    column-gap: var(--s-6);
+    align-items: start;
+    grid-template-columns: var(--cover-music) minmax(0, 1fr);
+    grid-template-areas:
+      "image kicker"
+      "image title"
+      "image meta"
+      "image poem"
+      "image summary"
+      "image back";
+  }
+  .poem-page > .cover-open { width: 100%; }
+}
+@media (min-width: 1024px) {
+  .poem-page { grid-template-columns: var(--cover-music-lg) minmax(0, 1fr); }
 }

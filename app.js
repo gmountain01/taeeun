@@ -8,8 +8,8 @@
   var barList = document.getElementById("bar-list");
   var barEl = document.querySelector(".bar");
 
-  var ORDER = ["comic", "music", "video", "art"];
-  var CAT_NAME = { comic: "웹툰", music: "음악", video: "영상", art: "그림" };
+  var ORDER = ["comic", "music", "poem", "video", "art"];
+  var CAT_NAME = { comic: "웹툰", music: "음악", poem: "시화", video: "영상", art: "그림" };
 
   // 글자 기호(←) 대신 쓰는 그린 아이콘(선 2px, 둥근 끝). 내용이 전부 내부 상수라 innerHTML로 만들어도 안전하다.
   var ICON_BACK = '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true" style="margin-right:var(--s-2)"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -100,7 +100,13 @@
   function workCoverSrc(w) {
     if (w.type === "video" || w.type === "music") return w.poster;
     if (w.type === "art") return w.images && w.images[0] ? w.images[0].src : "";
+    if (w.type === "poem") return w.image ? w.image.src : "";
     return w.cover;
+  }
+
+  // "img/seongam/1122.jpg" -> "img/seongam/480.jpg" 식(파일명 자체가 폭). cover-200 같은 접미사 방식과 달라 따로 둔다.
+  function poemVariantSrc(path, width) {
+    return path.replace(/\d+(?=\.[a-z]+$)/i, width);
   }
 
   // "img/eokgyo/cover.jpg" -> "img/eokgyo/cover-200.jpg" 같은, build_images.py가 같이 만들어 둔 작은 사본 경로.
@@ -113,6 +119,7 @@
   function homeCoverSrcset(w, cover) {
     if (w.type === "comic") return { srcset: smallVariantSrc(cover, 200) + " 200w, " + smallVariantSrc(cover, 400) + " 400w", sizes: "(min-width: 768px) 148px, 112px" };
     if (w.type === "music") return { srcset: smallVariantSrc(cover, 160) + " 160w, " + smallVariantSrc(cover, 320) + " 320w", sizes: "(min-width: 768px) 148px, 112px" };
+    if (w.type === "poem") return { srcset: poemVariantSrc(cover, 480) + " 480w, " + poemVariantSrc(cover, 800) + " 800w", sizes: "(min-width: 768px) 148px, 112px" };
     return {};
   }
 
@@ -155,7 +162,13 @@
     if (w.type === "music") return "노래 · " + w.duration;
     if (w.type === "video") return "영상 · " + w.duration;
     if (w.type === "art") return "그림 " + (w.images ? w.images.length : 0) + "장";
+    if (w.type === "poem") return "시화 · " + poemStanzas(w.poem).length + "연";
     return "";
+  }
+
+  // 시를 연(빈 줄로 구분) 단위로 나눈다. 빈 연은 버린다.
+  function poemStanzas(poem) {
+    return (poem || "").split("\n\n").filter(function (s) { return s.trim(); });
   }
 
   // 등장인물 얼굴 버튼: 홈·상세에서 같이 쓰는 항목(팝업 연결은 app 전체에 위임한 리스너 1개가 맡는다).
@@ -248,13 +261,18 @@
     var textChildren = [
       el("h3", {}, [w.title]),
       el("p", { class: "m" }, [workMetaLine(w) + " · " + formatKoreanDate(w.updated)]),
-      el("p", { class: "sum" }, [w.summary]),
     ];
+    if (w.summary) textChildren.push(el("p", { class: "sum" }, [w.summary]));
     if (w.type === "comic" && w.episodes && w.episodes.length) {
       var latest = w.episodes.slice(-(wide ? 3 : 1)).reverse();
       latest.forEach(function (ep) {
         textChildren.push(el("p", { class: "latest" }, [el("span", {}, ["최신 " + ep.n + "화"]), " " + ep.title]));
       });
+    }
+    if (w.type === "poem" && w.poem) {
+      var firstStanza = poemStanzas(w.poem)[0] || "";
+      var firstText = wide ? firstStanza : firstStanza.split("\n")[0];
+      textChildren.push(el("p", { class: "latest" }, [el("span", {}, ["첫 줄"]), " " + firstText]));
     }
     return el("a", { href: "#/series/" + id, class: wide ? "wide" : null }, [
       cover ? el("img", coverImgAttrs(w)) : el("div", { class: "im" }),
@@ -342,6 +360,7 @@
     if (s.type === "music") return renderMusicSeries(id, s);
     if (s.type === "video") return renderVideoSeries(id, s);
     if (s.type === "art") return renderArtSeries(id, s);
+    if (s.type === "poem") return renderPoemSeries(id, s);
     return renderComicSeries(id, s);
   }
 
@@ -497,6 +516,37 @@
 
     app.innerHTML = "";
     app.appendChild(el("div", { class: "wrap" }, [el("article", { class: "music-page" }, [cover, el("div", {}, info)])]));
+  }
+
+  function renderPoemSeries(id, s) {
+    setBar({ backHref: "#/", backText: DATA.siteName });
+    document.title = s.title + " — " + DATA.siteName;
+
+    var imgEl = el("img", extend({
+      class: "im",
+      src: poemVariantSrc(s.image.src, 800),
+      srcset: poemVariantSrc(s.image.src, 480) + " 480w, " + poemVariantSrc(s.image.src, 800) + " 800w, " + s.image.src + " 1122w",
+      sizes: "(min-width: 1024px) 400px, (min-width: 768px) 280px, 100vw",
+      alt: s.imageAlt,
+    }, imgSizeAttrs(s.image.src)));
+    var coverLink = el("a", { href: s.image.src, class: "cover-open", "aria-label": s.title + " 그림 크게 보기", "aria-haspopup": "dialog", "data-name": s.title, "data-sheet-alt": s.imageAlt }, [imgEl]);
+
+    var poemBody = el("div", { class: "poem-body" }, poemStanzas(s.poem).map(function (stanza) {
+      return el("p", {}, [stanza]);
+    }));
+
+    var children = [
+      el("p", { class: "kicker" }, ["시화"]),
+      el("h1", {}, [s.title]),
+      el("p", { class: "d-meta" }, [formatKoreanDate(s.updated) + " 업데이트"]),
+      coverLink,
+      poemBody,
+    ];
+    if (s.summary) children.push(el("p", { class: "media-summary" }, [s.summary]));
+    children.push(el("p", { class: "back-row" }, [backLink("#/", "작품 목록으로")]));
+
+    app.innerHTML = "";
+    app.appendChild(el("div", { class: "wrap" }, [el("article", { class: "poem-page" }, children)]));
   }
 
   function renderEpisode(id, n) {
