@@ -112,7 +112,8 @@ button { font: inherit; color: inherit; }
 .top-in { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-4); min-height: var(--bar-h); padding-top: var(--s-1); padding-bottom: var(--s-1); }
 .brand-h { margin: 0; }
 .brand { display: inline-flex; align-items: center; min-height: var(--tap); font: var(--w-reg) var(--t-xl)/1 var(--font-display); }
-.tabs { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--s-1); overflow-x: auto; flex: 1 1 100%; }
+.top-in nav[aria-label="카테고리"] { min-width: 0; flex: 1 1 100%; } /* .tabs는 이 nav의 자식이라 flex 속성이 직접 안 먹음 — nav 쪽에 둬야 칸이 늘어도(지금 5개) 안쪽에서만 가로 스크롤됨 */
+.tabs { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--s-1); overflow-x: auto; min-width: 0; }
 .tabs a {
   display: flex;
   align-items: center;
@@ -129,7 +130,7 @@ button { font: inherit; color: inherit; }
 .tabs .n { font-weight: var(--w-mid); font-size: var(--t-xs); }
 @media (min-width: 768px) {
   .top-in { flex-wrap: nowrap; justify-content: space-between; min-height: 0; height: var(--bar-h); padding-block: 0; }
-  .tabs { flex: none; }
+  .top-in nav[aria-label="카테고리"] { flex: none; min-width: 0; }
 }
 
 /* 홈: 작가 한 줄 */
@@ -162,13 +163,14 @@ button { font: inherit; color: inherit; }
 .cat-head h2 { margin: 0; font: var(--w-reg) var(--t-2xl)/var(--lh-tight) var(--font-display); }
 .cat-head .n { color: var(--ink-muted); font-weight: var(--w-strong); }
 
+/* v7.5: 액자 하나(4:5, contain, --frame 바탕) — 종류·칸 모양과 상관없이 모든 홈 카드가 같은 액자를 쓴다 */
+.frame { aspect-ratio: var(--ratio-frame); background: var(--frame); border-radius: var(--r-sm); overflow: hidden; }
+.frame img { width: 100%; height: 100%; object-fit: contain; }
+
 /* 3개 이상 = 표지 그리드 */
 .grid { display: grid; grid-template-columns: repeat(var(--grid-cols), minmax(0, 1fr)); gap: var(--s-5) var(--s-3); margin: 0; padding: 0; list-style: none; }
 @media (min-width: 768px) { .grid { gap: var(--s-5) var(--s-4); } }
 .card a { display: block; height: 100%; }
-.card .im { width: 100%; aspect-ratio: var(--ratio-cover); object-fit: cover; border-radius: var(--r-md); background: var(--surface); }
-.cat.music .im { aspect-ratio: var(--ratio-thumb); }
-.cat.video .im, .cat.art .im { aspect-ratio: var(--ratio-media); }
 .card h3 {
   margin: var(--s-2) 0 2px;
   font-size: var(--t-md);
@@ -178,43 +180,53 @@ button { font: inherit; color: inherit; }
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  min-height: calc(2em * var(--lh-card));
 }
-.card .m { margin: 0; font-size: var(--t-xs); color: var(--ink-muted); }
+.card .m { margin: 0; font-size: var(--t-xs); color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card a:hover h3 { text-decoration: underline; }
 
-/* 2개 이하 = 정보 카드 */
-.few .grid { grid-template-columns: minmax(0, 1fr); gap: var(--s-3); }
+/* 2개 이하 = 정보 카드. 줄 수를 고정해 카드 높이가 모두 같아지게 한다(제목 2·정보 1·소개 2·하이라이트 1) */
+.few .grid, .solo .grid { grid-template-columns: minmax(0, 1fr); gap: var(--s-3); }
 @media (min-width: 768px) and (max-width: 1023px) { .few .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.few .card:only-child { grid-column: 1 / -1; }
-.few .card a {
+@media (min-width: 768px) { .solo .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.few .card a, .solo .card a, .inside {
+  height: 100%;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: var(--s-3);
+}
+.few .card a, .solo .card a {
   display: grid;
   grid-template-columns: var(--card-img) minmax(0, 1fr);
   gap: var(--s-4);
   align-items: start;
-  padding: var(--s-3);
-  background: var(--surface);
-  border-radius: var(--r-md);
 }
-@media (min-width: 768px) { .few .card a { grid-template-columns: var(--card-img-md) minmax(0, 1fr); } }
-.few .card a.wide { grid-template-columns: var(--card-img-lg) minmax(0, 1fr); }
-/* 1024+에서 혼자 남아 전체 폭을 쓰는 칸: 작품 2개면 다시 2열로(전체 폭이라 자리가 있음) */
-@media (min-width: 1024px) { .cat.solo:not(.one) .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.few .card .im { border-radius: var(--r-sm); background: var(--bg); }
-.few .card h3 { margin: 0 0 var(--s-1); font-size: var(--t-lg); line-height: 1.35; -webkit-line-clamp: unset; }
-.few .card .m { font-size: var(--t-sm); }
-.few .sum {
+@media (min-width: 768px) { .few .card a, .solo .card a { grid-template-columns: var(--card-img-md) minmax(0, 1fr); } }
+.few .card h3, .solo .card h3 { margin: 0; font-size: var(--t-lg); line-height: var(--lh-tight); -webkit-line-clamp: 2; min-height: calc(2em * var(--lh-tight)); }
+.few .card .m, .solo .card .m { margin: var(--s-1) 0 0; font-size: var(--t-sm); }
+.few .sum, .solo .sum {
   margin: var(--s-2) 0 0;
   font-size: var(--t-md);
-  line-height: var(--lh-body);
+  line-height: 1.6;
   color: var(--ink-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  min-height: 3.2em;
 }
-.few .card a.wide .sum { -webkit-line-clamp: 3; }
-.few .latest { margin: var(--s-2) 0 0; font-size: var(--t-sm); font-weight: var(--w-strong); white-space: pre-line; }
-.few .latest span:first-child { color: var(--accent); margin-right: var(--s-1); }
+.few .hl, .solo .hl { margin: var(--s-2) 0 0; font-size: var(--t-sm); font-weight: var(--w-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.few .hl span:first-child, .solo .hl span:first-child { color: var(--accent); margin-right: var(--s-1); }
+
+/* solo(혼자 남은 칸) + 작품 1개: 카드 옆(768+)에 같은 높이의 "작품 안쪽" 미리보기. 폰은 숨김(장식이 아니라 정보라 숨김, 첫 화면 절약) */
+.inside { display: none; }
+@media (min-width: 768px) { .inside { display: block; } }
+.inside h4 { margin: 0 0 var(--s-2); font-size: var(--t-sm); color: var(--ink-muted); font-weight: var(--w-strong); }
+.inside ol { list-style: none; margin: 0; padding: 0; }
+.inside li a { display: flex; gap: var(--s-2); align-items: center; min-height: var(--tap); border-bottom: 1px solid var(--line); }
+.inside li a span:first-child { color: var(--accent); font-weight: var(--w-strong); font-size: var(--t-sm); flex: none; }
+.inside li a:hover span:last-child { text-decoration: underline; }
+.inside .lines { margin: 0; white-space: pre-line; line-height: var(--lh-read); font-size: var(--t-sm); }
 
 .foot { padding: var(--s-6) 0 var(--s-7); margin-top: var(--s-6); border-top: 1px solid var(--line); }
 .foot p { margin: 0; }

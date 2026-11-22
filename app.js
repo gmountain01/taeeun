@@ -230,13 +230,19 @@
     return el("header", { class: "top" }, [el("div", { class: "wrap top-in" }, children)]);
   }
 
+  // v7.5: 홈 카드 그림은 종류·칸 모양과 상관없이 같은 액자(.frame, 4:5, contain)에 넣는다.
   function coverImgAttrs(w) {
     // width/height는 img-sizes.js의 실제 픽셀(표지·포스터 원본 비율) — CSS aspect-ratio가 실제 보이는 크기는 따로 정한다.
     var cover = workCoverSrc(w);
-    var attrs = extend({ class: "im", src: cover, alt: "", loading: "lazy" }, imgSizeAttrs(cover));
+    var attrs = extend({ src: cover, alt: "", loading: "lazy" }, imgSizeAttrs(cover));
     var srcsetAttrs = homeCoverSrcset(w, cover);
     if (srcsetAttrs.srcset) { attrs.srcset = srcsetAttrs.srcset; attrs.sizes = srcsetAttrs.sizes; }
     return attrs;
+  }
+
+  function homeFrame(w) {
+    var cover = workCoverSrc(w);
+    return el("div", { class: "frame" }, cover ? [el("img", coverImgAttrs(w))] : []);
   }
 
   function renderFooter() {
@@ -247,37 +253,72 @@
   }
 
   function renderGridCard(id, w) {
-    var cover = workCoverSrc(w);
     return el("a", { href: "#/series/" + id }, [
-      cover ? el("img", coverImgAttrs(w)) : el("div", { class: "im" }),
+      homeFrame(w),
       el("h3", {}, [w.title]),
       el("p", { class: "m" }, [workMetaLine(w)]),
     ]);
   }
 
-  // wide: 1024+에서 혼자 남은 칸에 작품이 1개뿐일 때(넓은 정보 카드 — 요약 3줄, 웹툰은 최신 화 3개까지)
-  function renderInfoCard(id, w, wide) {
-    var cover = workCoverSrc(w);
+  // 소개가 없는 시화는 imageAlt의 그림 설명(". 시는"보다 앞부분)을 소개 자리에 대신 쓴다.
+  function workSummary(w) {
+    if (w.summary) return w.summary;
+    if (w.type === "poem" && w.imageAlt) return w.imageAlt.split(". 시는")[0];
+    return "";
+  }
+
+  // 종류마다 하이라이트 하나(정보 카드·표지 그리드 둘 다에는 안 쓰고 정보 카드에서만 쓴다): 웹툰 최신 화, 음악 첫 소절, 시화 첫 줄, 영상 길이, 그림 장수.
+  function firstLyricLine(transcript) {
+    var lines = (transcript || "").split("\n").filter(function (l) { return l && l[0] !== "["; });
+    return lines[0] || "";
+  }
+  function workHighlight(w) {
+    if (w.type === "comic" && w.episodes && w.episodes.length) {
+      var ep = w.episodes[w.episodes.length - 1];
+      return { label: "최신 " + ep.n + "화", text: ep.title };
+    }
+    if (w.type === "music") return { label: "첫 소절", text: firstLyricLine(w.transcript) };
+    if (w.type === "poem" && w.poem) return { label: "첫 줄", text: (poemStanzas(w.poem)[0] || "").split("\n")[0] };
+    if (w.type === "video") return { label: "길이", text: w.duration };
+    if (w.type === "art") return { label: "그림", text: (w.images ? w.images.length : 0) + "장" };
+    return null;
+  }
+
+  function renderInfoCard(id, w) {
     var textChildren = [
       el("h3", {}, [w.title]),
       el("p", { class: "m" }, [workMetaLine(w) + " · " + formatKoreanDate(w.updated)]),
     ];
-    if (w.summary) textChildren.push(el("p", { class: "sum" }, [w.summary]));
-    if (w.type === "comic" && w.episodes && w.episodes.length) {
-      var latest = w.episodes.slice(-(wide ? 3 : 1)).reverse();
-      latest.forEach(function (ep) {
-        textChildren.push(el("p", { class: "latest" }, [el("span", {}, ["최신 " + ep.n + "화"]), " " + ep.title]));
-      });
-    }
-    if (w.type === "poem" && w.poem) {
-      var firstStanza = poemStanzas(w.poem)[0] || "";
-      var firstText = wide ? firstStanza : firstStanza.split("\n")[0];
-      textChildren.push(el("p", { class: "latest" }, [el("span", {}, ["첫 줄"]), " " + firstText]));
-    }
-    return el("a", { href: "#/series/" + id, class: wide ? "wide" : null }, [
-      cover ? el("img", coverImgAttrs(w)) : el("div", { class: "im" }),
+    var summary = workSummary(w);
+    if (summary) textChildren.push(el("p", { class: "sum" }, [summary]));
+    var hl = workHighlight(w);
+    if (hl) textChildren.push(el("p", { class: "hl" }, [el("span", {}, [hl.label]), " " + hl.text]));
+    return el("a", { href: "#/series/" + id }, [
+      homeFrame(w),
       el("div", {}, textChildren),
     ]);
+  }
+
+  // solo(혼자 남은 칸)에 작품이 1개면 768+에서 카드 옆에 두는 같은 높이의 "작품 안쪽" 미리보기. 폰에서는 CSS로 숨긴다.
+  function renderInsideBox(id, w) {
+    if (w.type === "comic" && w.episodes && w.episodes.length) {
+      var latest = w.episodes.slice(-3).reverse();
+      return el("li", { class: "inside" }, [
+        el("h4", {}, ["최신 회차"]),
+        el("ol", {}, latest.map(function (ep) {
+          return el("li", {}, [el("a", { href: "#/ep/" + id + "/" + ep.n }, [el("span", {}, [ep.n + "화"]), el("span", {}, [ep.title])])]);
+        })),
+      ]);
+    }
+    if (w.type === "music") {
+      var lyricLines = (w.transcript || "").split("\n").filter(function (l) { return l && l[0] !== "["; }).slice(0, 4).join("\n");
+      return el("li", { class: "inside" }, [el("h4", {}, ["가사 첫 소절"]), el("p", { class: "lines" }, [lyricLines])]);
+    }
+    if (w.type === "poem" && w.poem) {
+      var stanzaText = poemStanzas(w.poem).slice(0, 2).join("\n\n");
+      return el("li", { class: "inside" }, [el("h4", {}, ["시 앞부분"]), el("p", { class: "lines" }, [stanzaText])]);
+    }
+    return el("li", { class: "inside" }, [el("h4", {}, ["소개"]), el("p", { class: "lines" }, [workSummary(w)])]);
   }
 
   // 1024+ 짝 맞추기: 칸 순서(웹툰·음악·영상·그림)는 바꾸지 않고, 위에서부터 보면서
@@ -299,7 +340,7 @@
         out.push({ group: next, cls: "few pair" });
         i += 2;
       } else {
-        out.push({ group: g, cls: "few solo" + (g.list.length === 1 ? " one" : "") });
+        out.push({ group: g, cls: "solo" });
         i += 1;
       }
     }
@@ -310,10 +351,10 @@
     var g = entry.group;
     var cls = entry.cls;
     var isFull = cls.indexOf("full") !== -1;
-    var isWide = cls.indexOf("one") !== -1;
     var cards = g.list.map(function (w) {
-      return el("li", { class: "card" }, [isFull ? renderGridCard(w.id, w.data) : renderInfoCard(w.id, w.data, isWide)]);
+      return el("li", { class: "card" }, [isFull ? renderGridCard(w.id, w.data) : renderInfoCard(w.id, w.data)]);
     });
+    if (cls === "solo" && g.list.length === 1) cards.push(renderInsideBox(g.list[0].id, g.list[0].data));
     return el("section", { class: "cat " + g.type + " " + cls, id: "cat-" + g.type, "aria-labelledby": "h-" + g.type }, [
       el("div", { class: "cat-head" }, [
         el("h2", { id: "h-" + g.type, tabindex: "-1" }, [CAT_NAME[g.type]]),
@@ -711,4 +752,12 @@
   }
   renderHome();
   window.scrollTo(0, 0);
+
+  // 개발자 메뉴(site/dev.js) 훅: DATA는 위에서 한 번 복사한 지역 변수라 window.DATA를 바꿔도 안 바뀐다.
+  // dev.js가 __setData로 지역 DATA까지 바꾼 뒤 __rerender로 지금 화면을 다시 그린다. 운영 동작에는 영향 없음.
+  window.__setData = function (d) { DATA = d; };
+  window.__rerender = function () {
+    if (location.hash && location.hash !== "#/") route();
+    else renderHome();
+  };
 })();
