@@ -597,6 +597,79 @@
       .filter(function (p) { return p.text; });
   }
 
+  // 음악 자체 재생 막대(v7.8, 사용자 "노래 2분 7초야 2분 3초야 정확히 맞춰줘"): 파일(2:07)은 그대로 두고
+  // 사이트가 보여 주는 길이를 endAt(없으면 파일 길이)으로 맞춘다. <audio>는 숨겨서 소리만 맡긴다.
+  // endAt에 닿으면 멈추고 처음으로 되돌린다. 막대 max가 endAt이라 그 너머로는 못 간다.
+  var ICON_PLAY = '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5v9l7.5-4.5z" fill="currentColor"/></svg>';
+  var ICON_PAUSE = '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 3.5h2.5v9H4.5zM9 3.5h2.5v9H9z" fill="currentColor"/></svg>';
+  function clock(sec) {
+    sec = Math.max(0, Math.floor(sec || 0));
+    return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
+  }
+  function spokenTime(sec) {
+    sec = Math.max(0, Math.floor(sec || 0));
+    var m = Math.floor(sec / 60), r = sec % 60;
+    return m ? m + "분" + (r ? " " + r + "초" : "") : r + "초";
+  }
+  function renderAudioPlayer(s) {
+    var audio = el("audio", { preload: "metadata", src: s.src, hidden: "" });
+    var btn = el("button", { type: "button", class: "play-btn", "aria-label": s.title + " 재생" });
+    var range = el("input", { type: "range", class: "seek", min: "0", max: String(s.endAt || 0), step: "1", value: "0", "aria-label": "재생 위치" });
+    var time = el("span", { class: "time" });
+    var end = s.endAt || 0;
+
+    function sync() {
+      var t = Math.min(audio.currentTime, end || audio.currentTime);
+      range.value = String(Math.floor(t));
+      range.setAttribute("aria-valuetext", spokenTime(t) + " / " + spokenTime(end));
+      time.textContent = clock(t) + " / " + clock(end);
+    }
+    function setPlaying(on) {
+      btn.innerHTML = on ? ICON_PAUSE : ICON_PLAY;
+      btn.setAttribute("aria-label", s.title + (on ? " 일시정지" : " 재생"));
+    }
+    function stopAtStart() {
+      audio.pause();
+      audio.currentTime = 0;
+      sync();
+    }
+    function seek(t) {
+      if (end && t >= end) return stopAtStart(); // 끝(End 키·끝까지 끌기)은 재생이 endAt에 닿은 것과 같게
+      audio.currentTime = Math.max(0, t);
+      sync();
+    }
+
+    audio.addEventListener("loadedmetadata", function () {
+      var d = Math.floor(audio.duration || 0);
+      end = s.endAt ? Math.min(s.endAt, d || s.endAt) : d;
+      range.max = String(end);
+      sync();
+    });
+    audio.addEventListener("timeupdate", function () {
+      if (end && audio.currentTime >= end) stopAtStart();
+      else sync();
+    });
+    audio.addEventListener("ended", stopAtStart);
+    audio.addEventListener("play", function () { setPlaying(true); });
+    audio.addEventListener("pause", function () { setPlaying(false); });
+    btn.addEventListener("click", function () {
+      if (audio.paused) audio.play().catch(function () {});
+      else audio.pause();
+    });
+    range.addEventListener("input", function () { seek(Number(range.value)); });
+    // 화살표는 1초(step) 대신 5초씩. Home/End는 브라우저 기본(처음/끝)에 맡긴다.
+    range.addEventListener("keydown", function (e) {
+      var dir = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+      if (!dir) return;
+      e.preventDefault();
+      seek(Math.floor(audio.currentTime) + dir * 5);
+    });
+
+    setPlaying(false);
+    sync();
+    return el("div", { class: "player", role: "group", "aria-label": s.title + " 듣기" }, [audio, btn, range, time]);
+  }
+
   function renderMusicSeries(id, s) {
     setBar({ backHref: "#/", backText: DATA.siteName });
     document.title = s.title + " — " + DATA.siteName;
@@ -613,12 +686,9 @@
         ])
       : el("div", { class: "im" });
 
-    var audioEl = el("audio", { controls: "", preload: "metadata", src: s.src, "aria-label": s.title + " 듣기" }, ["이 브라우저는 소리 재생을 지원하지 않아요."]);
-    attachEndAtClamp(audioEl, s.endAt);
-
     var body = [];
     if (s.summary) body.push(el("p", { class: "media-summary" }, [s.summary]));
-    body.push(audioEl);
+    body.push(renderAudioPlayer(s));
     var parts = lyricParts(s.transcript);
     var lyrics = null;
     if (parts.length) {

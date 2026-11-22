@@ -413,7 +413,19 @@ dialog.person::backdrop { background: var(--scrim); }
 .exhibit-art .im { width: 100%; object-fit: cover; border-radius: var(--r-md); background: var(--surface); }
 .exhibit-body { grid-area: body; min-width: 0; }
 .exhibit-body > .media-summary { margin: 0 0 var(--s-4); }
-.exhibit audio { display: block; width: 100%; max-width: var(--measure); }
+/* 음악 재생 막대(v7.8): [재생 버튼(주홍, 화면의 유일한 주홍 면)] [진행 막대] [0:00 / 2:03] */
+.player { display: flex; align-items: center; gap: var(--s-3); width: 100%; max-width: var(--measure); }
+.play-btn {
+  flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: var(--tap); height: var(--tap);
+  border: 0; border-radius: var(--r-pill);
+  background: var(--accent); color: var(--on-accent);
+  font-size: var(--t-lg); cursor: pointer;
+}
+.play-btn:hover { background: var(--accent-hover); }
+.seek { flex: 1; min-width: 0; height: var(--tap); margin: 0; accent-color: var(--ink); cursor: pointer; }
+.player .time { flex: none; font-size: var(--t-sm); font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
 @media (min-width: 768px) {
   .exhibit-in {
     grid-template-columns: var(--exhibit-art-md) minmax(0, 1fr);
