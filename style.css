@@ -394,7 +394,7 @@ dialog.person::backdrop { background: var(--scrim); }
 .transcript p { margin: var(--s-2) 0 0; line-height: var(--lh-read); white-space: pre-line; }
 
 /* ── 음악·시화 상세: "전시 벽"(v7.7) ──
-   작품 톤 바탕 띠 안에 그림 + 글. 폰: 제목 → 그림 → 본문 한 줄. 768+: 그림 왼쪽(두 행 차지) / 제목·본문 오른쪽. 1024+: 그림 고정(sticky). */
+   작품 톤 바탕 띠 안에 그림 + 글. 폰: 제목 → 그림 → 본문 한 줄. 768+: 그림 왼쪽(두 행 차지) / 제목·본문 오른쪽. 그림은 스크롤을 따라오지 않고, 높이는 오른쪽 글에 맞춘다. */
 .exhibit { --tone: var(--surface); background: var(--tone); }
 .exhibit.tone-warm { --tone: var(--tone-warm); }
 .exhibit.tone-cool { --tone: var(--tone-cool); }
@@ -427,8 +427,8 @@ dialog.person::backdrop { background: var(--scrim); }
 }
 @media (min-width: 1024px) {
   .exhibit-in { grid-template-columns: var(--exhibit-art-lg) minmax(0, 1fr); column-gap: var(--s-7); }
-  .exhibit-art { position: sticky; top: calc(var(--bar-h) + var(--s-5)); }
 }
+/* 768+: 그림 열 폭은 app.js fitExhibitArt()가 오른쪽 글 묶음(제목~본문) 높이에 맞춰 정한다(사용자 요청 2026-11-22). 위 값은 스크립트 전 기본값. */
 
 /* 시: 디스플레이급 크기·넉넉한 행간. 연 사이는 한 줄 이상 */
 .poem-body p { margin: 0 0 var(--s-6); max-width: var(--measure); font: var(--w-mid) var(--t-xl)/var(--lh-poem) var(--font-body); color: var(--ink); white-space: pre-line; }

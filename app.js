@@ -525,7 +525,28 @@
   // ── 음악·시화 상세 공용 "전시" 틀(v7.7) ──
   // 작품 톤 바탕 띠(.exhibit) 안에 그림(왼쪽, 1024+ 고정) + 글(오른쪽). 아래 흰 바탕에 "다른 작품" 줄과 목록 링크.
   // extra(선택): 768+에서 그림·글 아래 띠 전체 폭을 쓰는 칸(음악 가사).
+  // 768+에서 그림 높이를 오른쪽 글 묶음(제목~본문) 높이에 맞춘다. 그림 폭이 바뀌면 글 줄바꿈도 바뀌므로 두 번 잰다.
+  function fitExhibitArt() {
+    var inn = document.querySelector(".exhibit-in");
+    if (!inn) return;
+    if (window.innerWidth < 768) { inn.style.gridTemplateColumns = ""; return; }
+    var head = inn.querySelector(".exhibit-head");
+    var body = inn.querySelector(".exhibit-body");
+    var img = inn.querySelector(".exhibit-art img");
+    var w = Number(img && img.getAttribute("width")) || 1;
+    var h = Number(img && img.getAttribute("height")) || 1;
+    var cap = window.innerWidth >= 1024 ? 480 : 320;
+    for (var i = 0; i < 2; i++) {
+      var textH = body.getBoundingClientRect().bottom - head.getBoundingClientRect().top;
+      var artW = Math.max(200, Math.min(cap, Math.round(textH * w / h)));
+      inn.style.gridTemplateColumns = artW + "px minmax(0, 1fr)";
+    }
+  }
+  window.addEventListener("resize", fitExhibitArt);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitExhibitArt);
+
   function renderExhibit(s, kind, metaLine, art, bodyChildren, extra) {
+    requestAnimationFrame(fitExhibitArt);
     var tone = s.tone === "warm" || s.tone === "cool" ? " tone-" + s.tone : "";
     return el("article", { class: "exhibit" + tone }, [
       el("div", { class: "wrap exhibit-in" }, [
