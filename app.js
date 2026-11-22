@@ -340,7 +340,7 @@
           s.episodes.slice().reverse().map(function (ep) {
             return el("li", { class: "ep" }, [
               el("a", { href: "#/ep/" + id + "/" + ep.n }, [
-                el("img", { src: epThumbSrc(id, ep), alt: "", width: "320", height: "240", loading: "lazy" }),
+                el("img", { src: epThumbSrc(id, ep), alt: "", width: "320", height: "320", loading: "lazy" }),
                 el("span", {}, [badge(ep.n + "화"), el("span", { class: "t" }, [ep.title])]),
               ]),
             ]);

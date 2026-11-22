@@ -168,7 +168,7 @@ button { font: inherit; color: inherit; }
 .card a { display: block; height: 100%; }
 .card .im { width: 100%; aspect-ratio: var(--ratio-cut); object-fit: cover; border-radius: var(--r-md); background: var(--surface); }
 .cat.music .im { aspect-ratio: var(--ratio-thumb); }
-.cat.video .im, .cat.art .im { aspect-ratio: var(--ratio-ep-thumb); }
+.cat.video .im, .cat.art .im { aspect-ratio: var(--ratio-media); }
 .card h3 {
   margin: var(--s-2) 0 2px;
   font-size: var(--t-md);
